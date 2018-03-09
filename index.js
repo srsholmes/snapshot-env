@@ -1,3 +1,4 @@
-const snapshot = require('./dist');
+#!/usr/bin/env node
+const { snapshot } = require('./dist');
 
 snapshot();

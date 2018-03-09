@@ -12,12 +12,9 @@
     "node": ">=6"
   },
   "bin": {
-    "snippet": "./index.js"
+    "snapshot-env": "./index.js"
   },
-  "files": [
-    "dist",
-    "index.js"
-  ],
+  "files": ["dist", "index.js"],
   "scripts": {
     "test": "jest",
     "test:prod": "npm run clean && npm run build",
@@ -43,10 +40,7 @@
   "jest": {
     "testEnvironment": "node"
   },
-  "keywords": [
-    "snapshot",
-    "environment"
-  ],
+  "keywords": ["snapshot", "environment"],
   "dependencies": {
     "chalk": "^2.3.2",
     "fs-extra": "^5.0.0",
