@@ -1,5 +1,5 @@
+#!/usr/bin/env node
 // @flow
-
 const chalk = require('chalk');
 const {
   readFileSync,
