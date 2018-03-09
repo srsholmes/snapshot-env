@@ -1,0 +1,17 @@
+[ignore]
+.*/dist
+.*/coverage
+.*/node_modules/documentation
+.idea
+; Ignore vscode
+.*/.vscode/.*
+
+; Ignore JSON files in node_modules as they can be invalid
+.*/node_modules/.*\.json$
+
+; Ignore node_modules
+.*/node_modules/.*
+.*/public/.*
+
+[include]
+./src/
