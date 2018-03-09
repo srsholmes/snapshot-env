@@ -1,6 +1,6 @@
 {
   "name": "snapshot-env",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Snapshot environments for testing",
   "license": "MIT",
   "repository": "TODO",
@@ -14,7 +14,10 @@
   "bin": {
     "snapshot-env": "./index.js"
   },
-  "files": ["dist", "index.js"],
+  "files": [
+    "dist",
+    "index.js"
+  ],
   "scripts": {
     "test": "jest",
     "test:prod": "npm run clean && npm run build",
@@ -40,7 +43,10 @@
   "jest": {
     "testEnvironment": "node"
   },
-  "keywords": ["snapshot", "environment"],
+  "keywords": [
+    "snapshot",
+    "environment"
+  ],
   "dependencies": {
     "chalk": "^2.3.2",
     "fs-extra": "^5.0.0",
