@@ -6,12 +6,12 @@
     "prettier/flowtype",
     "plugin:flowtype/recommended"
   ],
-  "plugins": ["prettier", "flowtype", "flowtype-errors"],
+  "plugins": ["prettier", "flowtype"],
   "env": {
+    "node": true,
     "jest": true
   },
   "rules": {
-    "flowtype-errors/show-errors": "error",
     "prettier/prettier": [
       "error",
       {
