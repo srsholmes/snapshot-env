@@ -6,6 +6,7 @@ const {
   exists,
   copyFile,
   readFile,
+  remove,
   appendFile,
 } = require('fs-extra');
 const { promisify } = require('util');
@@ -23,6 +24,7 @@ type Config = {
   build: string,
   server: string,
   output: string,
+  commit: string,
 };
 
 const SNAPSHOT = 'snapshot';
@@ -33,6 +35,36 @@ const CONFIG_FILE: string = readFileSync(ENV_PATH, 'utf8');
 const CONFIG: Config = JSON.parse(CONFIG_FILE);
 
 log(info('CONFIG: ', JSON.stringify(CONFIG)));
+
+let currentBranch = null;
+
+const checkoutGitCommit = async () => {
+  const { commit } = CONFIG;
+  if (commit) {
+    try {
+      log(info(`Checking out commit: ${commit}`));
+      const { stdout } = await exec(`git rev-parse --abbrev-ref HEAD`);
+      currentBranch = stdout;
+      const res = await exec(`git checkout -f ${commit}`).stdout;
+      log(('Output:', res));
+    } catch (err) {
+      log(error('Something went wrong:', err));
+    }
+  }
+};
+
+const revertGitCheckout = async () => {
+  if (currentBranch) {
+    try {
+      log(info(`Reverting back to previous branch: ${currentBranch}`));
+      const { stdout } = await exec(`git checkout ${currentBranch}`);
+      currentBranch = null;
+      log(('Output:', stdout));
+    } catch (err) {
+      log(error('Something went wrong:', err));
+    }
+  }
+};
 
 const runBuildStep = async () => {
   separator();
@@ -87,6 +119,7 @@ const startServer = async serverFile => {
 };
 
 const ignoreSnapshot = async () => {
+  // TODO: Add in snapshot json to prevent error of 'cannot checkout' if snapshot json has changed and isnt commited.
   separator();
   const name = '.gitignore';
   const file = await readFile(name, 'utf8');
@@ -94,6 +127,7 @@ const ignoreSnapshot = async () => {
   if (!isIgnored) {
     log(info('Adding snapshot to gitignore...'));
     await appendFile(name, '\nsnapshot\n');
+    await exec(`git add . && git commit -m 'added snapshot to .gitignore'`);
   }
   log(info('Snapshot directory added to gitignore'));
 };
@@ -123,6 +157,9 @@ const createLocalServer = async () => {
 const snapshot = async () => {
   try {
     await ignoreSnapshot();
+    // TODO: Check if current work is not staged and cancel if not clean branch state (as the new checkout will lose any data)
+    // Or do a git stash.
+    await checkoutGitCommit();
     await runBuildStep();
     await copyBuildDir();
     const { server } = CONFIG;
@@ -131,7 +168,9 @@ const snapshot = async () => {
     } else {
       await createLocalServer();
     }
+    await revertGitCheckout();
   } catch (err) {
+    await revertGitCheckout();
     log(error(err));
   }
 };
