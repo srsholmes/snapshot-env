@@ -49,15 +49,11 @@ const checkoutGitCommit = async () => {
 };
 
 const warnIfUncommitedChanges = async () => {
-  console.log('warnIfUncommitedChanges');
-  console.log(commit);
   if (commit) {
     log(info(`Checking to see if current branch has unstaged changes...`));
     const { stdout } = await exec(
       `git diff-index --quiet HEAD -- || echo "untracked"  >&1`,
     );
-    console.log('**************');
-    console.log({ stdout });
     if (stdout === 'untracked\n') {
       throw new Error(`You have uncommitted changes which would be lost by creating a snapshot of a different branch \n
       Please either stash or commit your changes before creating a snapshot of a specific commit.`);
@@ -161,8 +157,6 @@ const createLocalServer = async () => {
 const snapshot = async () => {
   try {
     await ignoreSnapshot();
-    // TODO: Check if current work is not staged and cancel if not clean branch state (as the new checkout will lose any data)
-    // Or do a git stash.
     await warnIfUncommitedChanges();
     await checkoutGitCommit();
     await runBuildStep();
