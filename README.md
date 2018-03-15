@@ -39,7 +39,7 @@ This should be the build command to build your project. It is recommended for th
 
 `output`
 
-This should be the directory of the outputted folder.
+This should be the directory of the output of the `build` command.
 
 `commit`
 
