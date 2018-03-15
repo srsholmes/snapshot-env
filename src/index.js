@@ -35,34 +35,42 @@ const CONFIG_FILE: string = readFileSync(ENV_PATH, 'utf8');
 const CONFIG: Config = JSON.parse(CONFIG_FILE);
 
 log(info('CONFIG: ', JSON.stringify(CONFIG)));
-
+const { commit } = CONFIG;
 let currentBranch = null;
 
 const checkoutGitCommit = async () => {
-  const { commit } = CONFIG;
   if (commit) {
-    try {
-      log(info(`Checking out commit: ${commit}`));
-      const { stdout } = await exec(`git rev-parse --abbrev-ref HEAD`);
-      currentBranch = stdout;
-      const res = await exec(`git checkout -f ${commit}`).stdout;
-      log(('Output:', res));
-    } catch (err) {
-      log(error('Something went wrong:', err));
+    log(info(`Checking out commit: ${commit}`));
+    const { stdout } = await exec(`git rev-parse --abbrev-ref HEAD`);
+    currentBranch = stdout;
+    const res = await exec(`git checkout -f ${commit}`).stdout;
+    log(('Output:', res));
+  }
+};
+
+const warnIfUncommitedChanges = async () => {
+  console.log('warnIfUncommitedChanges');
+  console.log(commit);
+  if (commit) {
+    log(info(`Checking to see if current branch has unstaged changes...`));
+    const { stdout } = await exec(
+      `git diff-index --quiet HEAD -- || echo "untracked"  >&1`,
+    );
+    console.log('**************');
+    console.log({ stdout });
+    if (stdout === 'untracked\n') {
+      throw new Error(`You have uncommitted changes which would be lost by creating a snapshot of a different branch \n
+      Please either stash or commit your changes before creating a snapshot of a specific commit.`);
     }
   }
 };
 
 const revertGitCheckout = async () => {
   if (currentBranch) {
-    try {
-      log(info(`Reverting back to previous branch: ${currentBranch}`));
-      const { stdout } = await exec(`git checkout ${currentBranch}`);
-      currentBranch = null;
-      log(('Output:', stdout));
-    } catch (err) {
-      log(error('Something went wrong:', err));
-    }
+    log(info(`Reverting back to previous branch: ${currentBranch}`));
+    const { stdout } = await exec(`git checkout ${currentBranch}`);
+    currentBranch = null;
+    log(('Output:', stdout));
   }
 };
 
@@ -106,16 +114,12 @@ function runScript(scriptPath, cb) {
 
 const startServer = async serverFile => {
   const path = `${process.cwd()}/${serverFile}`;
-  try {
-    const server = await fork(path);
-    log(info(server));
-    runScript(serverFile, err => {
-      if (err) throw err;
-    });
-    log(info('Custom Server started'));
-  } catch (err) {
-    log(error(err));
-  }
+  const server = await fork(path);
+  log(info(server));
+  runScript(serverFile, err => {
+    if (err) throw err;
+  });
+  log(info('Custom Server started'));
 };
 
 const ignoreSnapshot = async () => {
@@ -159,6 +163,7 @@ const snapshot = async () => {
     await ignoreSnapshot();
     // TODO: Check if current work is not staged and cancel if not clean branch state (as the new checkout will lose any data)
     // Or do a git stash.
+    await warnIfUncommitedChanges();
     await checkoutGitCommit();
     await runBuildStep();
     await copyBuildDir();
