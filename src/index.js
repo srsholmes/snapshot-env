@@ -6,7 +6,6 @@ const {
   exists,
   copyFile,
   readFile,
-  remove,
   appendFile,
 } = require('fs-extra');
 const { promisify } = require('util');
@@ -29,26 +28,28 @@ type Config = {
 
 const SNAPSHOT = 'snapshot';
 const ENV_PATH = `./${SNAPSHOT}.json`;
-const TEMP_DIR = `./${SNAPSHOT}`;
+const TEMP_DIR = `./${SNAPSHOT}s`;
 const PORT = 3000;
 const CONFIG_FILE: string = readFileSync(ENV_PATH, 'utf8');
 const CONFIG: Config = JSON.parse(CONFIG_FILE);
 
 log(info('CONFIG: ', JSON.stringify(CONFIG)));
-const { commit } = CONFIG;
-let currentBranch = null;
 
-const checkoutGitCommit = async () => {
+const getCurrentGitBranch = async () => {
+  log(info(`Getting current git branch`));
+  const { stdout } = await exec(`git rev-parse --abbrev-ref HEAD`);
+  return stdout;
+};
+
+const checkoutGitCommit = async commit => {
   if (commit) {
     log(info(`Checking out commit: ${commit}`));
-    const { stdout } = await exec(`git rev-parse --abbrev-ref HEAD`);
-    currentBranch = stdout;
     const res = await exec(`git checkout -f ${commit}`).stdout;
     log(('Output:', res));
   }
 };
 
-const warnIfUncommitedChanges = async () => {
+const warnIfUncommittedChanges = async commit => {
   if (commit) {
     log(info(`Checking to see if current branch has unstaged changes...`));
     const { stdout } = await exec(
@@ -61,11 +62,10 @@ const warnIfUncommitedChanges = async () => {
   }
 };
 
-const revertGitCheckout = async () => {
-  if (currentBranch) {
-    log(info(`Reverting back to previous branch: ${currentBranch}`));
-    const { stdout } = await exec(`git checkout ${currentBranch}`);
-    currentBranch = null;
+const revertGitCheckout = async branch => {
+  if (branch) {
+    log(info(`Reverting back to previous branch: ${branch}`));
+    const { stdout } = await exec(`git checkout ${branch}`);
     log(('Output:', stdout));
   }
 };
@@ -119,7 +119,6 @@ const startServer = async serverFile => {
 };
 
 const ignoreSnapshot = async () => {
-  // TODO: Add in snapshot json to prevent error of 'cannot checkout' if snapshot json has changed and isnt commited.
   separator();
   const name = '.gitignore';
   const file = await readFile(name, 'utf8');
@@ -135,8 +134,11 @@ const ignoreSnapshot = async () => {
 const copyBuildDir = async () => {
   separator();
   log(info('Copying output directory...........!'));
-  await copy(CONFIG.output, TEMP_DIR);
+  const { stdout } = await exec(`git log --pretty=format:'%h' -n 1`);
+  const dir = `${TEMP_DIR}/${stdout}`;
+  await copy(CONFIG.output, dir);
   log(info('Directory copied!'));
+  return dir;
 };
 
 const useLocalServer = async server => {
@@ -147,30 +149,33 @@ const useLocalServer = async server => {
   log(info(`Custom server started....`));
 };
 
-const createLocalServer = async () => {
+const createLocalServer = async dir => {
   separator();
   log('No custom server found, creating static hosted server');
-  createServer({ root: `${TEMP_DIR}/` }).listen(parseInt(PORT, 10));
+  createServer({
+    root: dir,
+  }).listen(parseInt(PORT, 10));
   log(go(`View local deploy here: http://localhost:${PORT}`));
 };
 
 const snapshot = async () => {
+  const { server, commit } = CONFIG;
+  const currentBranch = await getCurrentGitBranch();
   try {
     await ignoreSnapshot();
-    await warnIfUncommitedChanges();
-    await checkoutGitCommit();
+    await warnIfUncommittedChanges(commit);
+    await checkoutGitCommit(commit);
     await runBuildStep();
-    await copyBuildDir();
-    const { server } = CONFIG;
+    const directoryToHost = await copyBuildDir();
     if (server) {
       await useLocalServer(server);
     } else {
-      await createLocalServer();
+      await createLocalServer(directoryToHost);
     }
-    await revertGitCheckout();
   } catch (err) {
-    await revertGitCheckout();
     log(error(err));
+  } finally {
+    await revertGitCheckout(currentBranch);
   }
 };
 
