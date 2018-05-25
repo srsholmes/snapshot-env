@@ -13,6 +13,8 @@ const { promisify } = require('util');
 const { createServer } = require('http-server');
 const exec = promisify(require('child_process').exec);
 const { fork } = require('child_process');
+const inquirer = require('inquirer');
+const simpleGit = require('simple-git/promise')();
 
 const info = chalk.blue;
 const go = chalk.green;
@@ -26,7 +28,6 @@ type Config = {
   output: string,
   commit: string,
 };
-
 const SNAPSHOT = 'snapshot';
 const ENV_PATH = `./${SNAPSHOT}.json`;
 const TEMP_DIR = `node_modules/snapshot-env/${__dirname
@@ -187,7 +188,20 @@ const snapshot = async () => {
   try {
     await ignoreSnapshot();
     await warnIfUncommittedChanges(commit);
-    await checkoutGitCommit(commit);
+    if (commit) {
+      await checkoutGitCommit(commit);
+    } else {
+      const { branches } = await simpleGit.branch();
+      const branchName = await inquirer.prompt([
+        {
+          type: 'list',
+          name: 'size',
+          message: 'What branch would you like to snapshot?',
+          choices: Object.keys(branches),
+        },
+      ]);
+      await checkoutGitCommit(branchName.size);
+    }
     await runBuildStep();
     const directoryToHost = await copyBuildDir();
     if (server) {
