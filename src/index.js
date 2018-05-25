@@ -1,11 +1,11 @@
 // @flow
 const chalk = require('chalk');
 const {
-  readFileSync,
+  readFile,
   copy,
   exists,
   copyFile,
-  readFile,
+  pathExists,
   appendFile,
   remove,
 } = require('fs-extra');
@@ -28,15 +28,12 @@ type Config = {
   output: string,
   commit: string,
 };
+
+const PORT = 3000;
 const SNAPSHOT = 'snapshot';
-const ENV_PATH = `./${SNAPSHOT}.json`;
 const TEMP_DIR = `node_modules/snapshot-env/${__dirname
   .split('/')
   .pop()}/${SNAPSHOT}s`;
-
-const PORT = 3000;
-const CONFIG_FILE: string = readFileSync(ENV_PATH, 'utf8');
-const CONFIG: Config = JSON.parse(CONFIG_FILE);
 
 process.stdin.resume();
 
@@ -54,8 +51,6 @@ async function exitHandler(options, err) {
   process.on(x, exitHandler.bind(null, { cleanup: true, exit: true }))
 );
 
-log(info('CONFIG: ', JSON.stringify(CONFIG)));
-
 const getCurrentGitBranch = async () => {
   log(info(`Getting current git branch`));
   const { stdout } = await exec(`git rev-parse --abbrev-ref HEAD`);
@@ -70,16 +65,14 @@ const checkoutGitCommit = async commit => {
   }
 };
 
-const warnIfUncommittedChanges = async commit => {
-  if (commit) {
-    log(info(`Checking to see if current branch has unstaged changes...`));
-    const { stdout } = await exec(
-      `git diff-index --quiet HEAD -- || echo "untracked"  >&1`
-    );
-    if (stdout) {
-      throw new Error(`You have uncommitted changes which would be lost by creating a snapshot of a different branch \n
+const warnIfUncommittedChanges = async () => {
+  log(info(`Checking to see if current branch has unstaged changes...`));
+  const { stdout } = await exec(
+    `git diff-index --quiet HEAD -- || echo "untracked"  >&1`
+  );
+  if (stdout) {
+    throw new Error(`You have uncommitted changes which would be lost by creating a snapshot of a different branch \n
       Please either stash or commit your changes before creating a snapshot of a specific commit.`);
-    }
   }
 };
 
@@ -91,10 +84,10 @@ const revertGitCheckout = async branch => {
   }
 };
 
-const runBuildStep = async () => {
+const runBuildStep = async config => {
   separator();
   log('Running build process...');
-  const { build } = CONFIG;
+  const { build } = config;
   const { stdout, stderr } = await exec(`${build}`, {
     maxBuffer: 1024 * 8000,
   });
@@ -152,12 +145,12 @@ const ignoreSnapshot = async () => {
   log(info('Snapshot directory added to gitignore'));
 };
 
-const copyBuildDir = async () => {
+const copyBuildDir = async config => {
   separator();
   log(info('Copying output directory...........!'));
   const { stdout } = await exec(`git log --pretty=format:'%h' -n 1`);
   const dir = `${TEMP_DIR}/${stdout}`;
-  await copy(CONFIG.output, dir);
+  await copy(config.output, dir);
   log(info('Directory copied!'));
   return dir;
 };
@@ -179,35 +172,75 @@ const createLocalServer = async dir => {
   log(go(`View local deploy here: http://localhost:${PORT}`));
 };
 
+const runBuildSteps = async (config: Config) => {
+  await runBuildStep(config);
+  const directoryToHost = await copyBuildDir(config);
+  if (config.server) {
+    await useLocalServer(config.server);
+  } else {
+    await createLocalServer(directoryToHost);
+  }
+};
+
 // TODO: Make this snapshots directory an option.
 // TODO: Either checkout commit from snapshot json or lauch inquirer to checkout a branch.
 
+const runConfigSteps = async config => {
+  log(info('CONFIG File found: ', JSON.stringify(config)));
+  await checkoutGitCommit(config.commit);
+  await runBuildSteps(config);
+};
+
+const runInquirer = async () => {
+  const { branches } = await simpleGit.branch();
+  const { branch } = await inquirer.prompt([
+    {
+      type: 'list',
+      name: 'branch',
+      message: 'What branch would you like to snapshot ?',
+      choices: Object.keys(branches),
+    },
+  ]);
+  await checkoutGitCommit(branch);
+  const { build } = await inquirer.prompt([
+    {
+      type: 'input',
+      name: 'build',
+      message: 'What is your build command ?',
+      validate: value => true,
+      // TODO: Validate the build command form the package json.
+    },
+  ]);
+  const { output } = await inquirer.prompt([
+    {
+      type: 'input',
+      name: 'output',
+      message: 'What is your output directory ?',
+      // TODO: Validate the build command form the package json.
+      validate: value => true,
+    },
+  ]);
+  const configObj = {
+    build,
+    commit: branch,
+    output,
+  };
+  await runBuildSteps(configObj);
+};
+
 const snapshot = async () => {
-  const { server, commit } = CONFIG;
+  await ignoreSnapshot();
+  await warnIfUncommittedChanges();
   const currentBranch = await getCurrentGitBranch();
   try {
-    await ignoreSnapshot();
-    await warnIfUncommittedChanges(commit);
-    if (commit) {
-      await checkoutGitCommit(commit);
+    // TODO: validate config file
+    const config = `./${SNAPSHOT}.json`;
+    const hasConfig: string = await pathExists(config, 'utf8');
+    if (hasConfig) {
+      const configFIle: string = await readFile(config, 'utf8');
+      await runConfigSteps(JSON.parse(configFIle));
     } else {
-      const { branches } = await simpleGit.branch();
-      const branchName = await inquirer.prompt([
-        {
-          type: 'list',
-          name: 'size',
-          message: 'What branch would you like to snapshot?',
-          choices: Object.keys(branches),
-        },
-      ]);
-      await checkoutGitCommit(branchName.size);
-    }
-    await runBuildStep();
-    const directoryToHost = await copyBuildDir();
-    if (server) {
-      await useLocalServer(server);
-    } else {
-      await createLocalServer(directoryToHost);
+      await runInquirer();
     }
   } catch (err) {
     log(error(err));
