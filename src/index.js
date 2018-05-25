@@ -124,7 +124,7 @@ function runScript(scriptPath, cb) {
 
 const startServer = async serverFile => {
   const path = `${process.cwd()}/${serverFile}`;
-  const server = await fork(path);
+  const server = fork(path);
   log(info(server));
   runScript(serverFile, err => {
     if (err) throw err;
@@ -181,9 +181,6 @@ const runBuildSteps = async (config: Config) => {
     await createLocalServer(directoryToHost);
   }
 };
-
-// TODO: Make this snapshots directory an option.
-// TODO: Either checkout commit from snapshot json or lauch inquirer to checkout a branch.
 
 const runConfigSteps = async config => {
   log(info('CONFIG File found: ', JSON.stringify(config)));
