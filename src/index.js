@@ -7,6 +7,7 @@ const {
   copyFile,
   readFile,
   appendFile,
+  remove,
 } = require('fs-extra');
 const { promisify } = require('util');
 const { createServer } = require('http-server');
@@ -28,10 +29,29 @@ type Config = {
 
 const SNAPSHOT = 'snapshot';
 const ENV_PATH = `./${SNAPSHOT}.json`;
-const TEMP_DIR = `./${SNAPSHOT}s`;
+const TEMP_DIR = `node_modules/snapshot-env/${__dirname
+  .split('/')
+  .pop()}/${SNAPSHOT}s`;
+
 const PORT = 3000;
 const CONFIG_FILE: string = readFileSync(ENV_PATH, 'utf8');
 const CONFIG: Config = JSON.parse(CONFIG_FILE);
+
+process.stdin.resume();
+
+async function exitHandler(options, err) {
+  if (options.cleanup) console.log('cleaning up...');
+  if (err) console.log(err.stack);
+  separator();
+  log(go('Removing snapshot directory...'));
+  await remove(TEMP_DIR);
+  separator();
+  if (options.exit) process.exit();
+}
+
+['exit', 'SIGINT', 'SIGUSR1', 'SIGUSR2', 'uncaughtException'].forEach(x =>
+  process.on(x, exitHandler.bind(null, { cleanup: true, exit: true }))
+);
 
 log(info('CONFIG: ', JSON.stringify(CONFIG)));
 
@@ -53,7 +73,7 @@ const warnIfUncommittedChanges = async commit => {
   if (commit) {
     log(info(`Checking to see if current branch has unstaged changes...`));
     const { stdout } = await exec(
-      `git diff-index --quiet HEAD -- || echo "untracked"  >&1`,
+      `git diff-index --quiet HEAD -- || echo "untracked"  >&1`
     );
     if (stdout) {
       throw new Error(`You have uncommitted changes which would be lost by creating a snapshot of a different branch \n
@@ -157,6 +177,9 @@ const createLocalServer = async dir => {
   }).listen(parseInt(PORT, 10));
   log(go(`View local deploy here: http://localhost:${PORT}`));
 };
+
+// TODO: Make this snapshots directory an option.
+// TODO: Either checkout commit from snapshot json or lauch inquirer to checkout a branch.
 
 const snapshot = async () => {
   const { server, commit } = CONFIG;
