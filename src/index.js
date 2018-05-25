@@ -199,6 +199,7 @@ const runInquirer = async () => {
     {
       type: 'list',
       name: 'branch',
+      pageSize: 20,
       message: 'What branch would you like to snapshot ?',
       choices: Object.keys(branches),
     },
