@@ -15,6 +15,7 @@ const exec = promisify(require('child_process').exec);
 const { fork } = require('child_process');
 const inquirer = require('inquirer');
 const simpleGit = require('simple-git/promise')();
+const ngrok = require('ngrok');
 
 const info = chalk.blue;
 const go = chalk.green;
@@ -169,7 +170,11 @@ const createLocalServer = async dir => {
   createServer({
     root: dir,
   }).listen(parseInt(PORT, 10));
+  const externalServer = await ngrok.connect(PORT);
+
   log(go(`View local deploy here: http://localhost:${PORT}`));
+  separator();
+  log(go(`Or view externally here: ${externalServer}`));
 };
 
 const runBuildSteps = async (config: Config) => {
@@ -213,7 +218,7 @@ const runInquirer = async () => {
       type: 'input',
       name: 'output',
       message: 'What is your output directory ?',
-      // TODO: Validate the build command form the package json.
+      // Watch for new folders being created to read output?
       validate: value => true,
     },
   ]);
