@@ -1,22 +1,33 @@
 // @flow
 
-import { readFile, pathExists, remove } from 'fs-extra';
-import { runInquirer } from './inquirer';
+import { pathExists, readFile, remove } from 'fs-extra';
+import getConfigFromUser from './inquirer';
 import {
-  getCurrentGitBranch,
-  checkoutGitCommit,
   warnIfUncommittedChanges,
+  checkoutGitCommit,
+  getCurrentGitBranch,
   revertGitCheckout,
 } from './git';
 import runBuildSteps from './build';
-import { info, go, error, separator, log } from './log';
+import { error, go, info, log, separator } from './log';
 import { getDependencies } from './files';
+import { sequence } from './utils';
 
 export type Config = {
   build: string,
   commit: string,
   output: string,
-  server?: string,
+};
+
+type UserConfig = {
+  build?: string,
+  commit?: string,
+  output?: string,
+};
+
+export type PackageJson = {
+  dependencies?: any,
+  devDependencies?: any,
 };
 
 export const PORT = 3000;
@@ -41,26 +52,52 @@ async function exitHandler(options, err) {
   process.on(x, exitHandler.bind(null, { cleanup: true, exit: true }))
 );
 
-const runConfigSteps = async (config: Config) => {
-  log(info('CONFIG File found: ', JSON.stringify(config)));
-  await checkoutGitCommit(config.commit);
-  const deps = await getDependencies();
-  await runBuildSteps(config, deps);
+const getNeededConfig = async (arr: Array<string>) => {
+  const fns = arr.map(x => () => getConfigFromUser(x));
+  const res = await sequence(fns);
+  return res.reduce((acc, curr, i) => ({ ...acc, [arr[i]]: curr }), {});
 };
 
+const runBuildWizard = async (config: Config) => {
+  const unsetConfigValues = Object.entries(config)
+    .filter(([_, val]) => !val)
+    .map(x => x[0]);
+
+  const neededConfig = await getNeededConfig(unsetConfigValues);
+  const finalConfig = {
+    ...config,
+    ...neededConfig,
+  };
+  log(info('Config: ', JSON.stringify(finalConfig)));
+  await checkoutGitCommit(finalConfig.commit);
+  const deps = await getDependencies();
+  await runBuildSteps(finalConfig, deps);
+};
+
+const getSnapshotConfig = async (hasConfig: boolean): UserConfig => {
+  if (hasConfig) {
+    const configFile = await readFile(`./${SNAPSHOT}.json`, 'utf8');
+    return JSON.parse(configFile);
+  }
+  return null;
+};
+
+// TODO: Go down a single route, using inquirer if the config prop is not found.
 export const snapshot = async () => {
-  await warnIfUncommittedChanges();
+  // await warnIfUncommittedChanges();
   const currentBranch = await getCurrentGitBranch();
   try {
-    // TODO: validate config file
-    const config = `./${SNAPSHOT}.json`;
-    const hasConfig: string = await pathExists(config, 'utf8');
-    if (hasConfig) {
-      const configFIle: string = await readFile(config, 'utf8');
-      await runConfigSteps(JSON.parse(configFIle));
-    } else {
-      await runInquirer();
-    }
+    const configStr = `./${SNAPSHOT}.json`;
+    const hasConfig: boolean = await pathExists(configStr, 'utf8');
+    const userConfig = await getSnapshotConfig(hasConfig);
+    const config = {
+      build: null,
+      commit: null,
+      output: null,
+      ...userConfig,
+    };
+
+    await runBuildWizard(config);
   } catch (err) {
     log(error(err));
   } finally {

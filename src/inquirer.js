@@ -1,13 +1,28 @@
 // @flow
 import inquirer from 'inquirer';
-import { getDependencies } from './files';
-import { checkoutGitCommit } from './git';
-import runBuildSteps from './build';
+import { readFile } from 'fs-extra';
+import { log } from './log';
 
 const simpleGit = require('simple-git/promise')();
 
+const getBuildConfig = async (): Promise<string> => {
+  const pkgJsonFile = await readFile('./package.json', 'utf8');
+  const { scripts } = JSON.parse(pkgJsonFile);
+  const { build } = await inquirer.prompt([
+    {
+      type: 'list',
+      name: 'build',
+      choices: Object.keys(scripts),
+      message: 'What is your build command ?',
+      validate: value => true,
+      // TODO: Validate the build command form the package json.
+    },
+  ]);
 
-const runInquirer = async () => {
+  return `npm run ${build}`;
+};
+
+const getGitConfig = async (): Promise<string> => {
   const { branches } = await simpleGit.branch();
   const { branch } = await inquirer.prompt([
     {
@@ -19,18 +34,10 @@ const runInquirer = async () => {
     },
   ]);
 
-  const deps = await getDependencies();
-  await checkoutGitCommit(branch);
+  return branch;
+};
 
-  const { build } = await inquirer.prompt([
-    {
-      type: 'input',
-      name: 'build',
-      message: 'What is your build command ?',
-      validate: value => true,
-      // TODO: Validate the build command form the package json.
-    },
-  ]);
+const getOutputConfig = async (): Promise<string> => {
   const { output } = await inquirer.prompt([
     {
       type: 'input',
@@ -40,14 +47,29 @@ const runInquirer = async () => {
       validate: value => true,
     },
   ]);
-  const configObj = {
-    build,
-    commit: branch,
-    output,
-  };
-  await runBuildSteps(configObj, deps);
+  return output;
 };
 
-module.exports = {
-  runInquirer,
+const getConfigFromUser = async (key: string) => {
+  switch (key) {
+    case 'build': {
+      log('Build config missing');
+      const build = await getBuildConfig();
+      return build;
+    }
+    case 'commit': {
+      log('Commit config missing');
+      const branch = await getGitConfig();
+      return branch;
+    }
+    case 'output': {
+      log('output config missing');
+      const branch = await getOutputConfig();
+      return branch;
+    }
+    default:
+      return 'lol';
+  }
 };
+
+export default getConfigFromUser;
