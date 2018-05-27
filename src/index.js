@@ -17,12 +17,13 @@ export type Config = {
   build: string,
   commit: string,
   output: string,
+  server: string,
 };
 
 type UserConfig = {
-  build?: string,
-  commit?: string,
-  output?: string,
+  build: ?string,
+  commit: ?string,
+  output: ?string,
 };
 
 export type PackageJson = {
@@ -58,7 +59,7 @@ const getNeededConfig = async (arr: Array<string>) => {
   return res.reduce((acc, curr, i) => ({ ...acc, [arr[i]]: curr }), {});
 };
 
-const runBuildWizard = async (config: Config) => {
+const runBuildWizard = async (config: UserConfig) => {
   const unsetConfigValues = Object.entries(config)
     .filter(([_, val]) => !val)
     .map(x => x[0]);
@@ -74,7 +75,7 @@ const runBuildWizard = async (config: Config) => {
   await runBuildSteps(finalConfig, deps);
 };
 
-const getSnapshotConfig = async (hasConfig: boolean): UserConfig => {
+const getSnapshotConfig = async (hasConfig: boolean) => {
   if (hasConfig) {
     const configFile = await readFile(`./${SNAPSHOT}.json`, 'utf8');
     return JSON.parse(configFile);
