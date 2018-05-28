@@ -7,6 +7,7 @@ import {
   checkoutGitCommit,
   getCurrentGitBranch,
   revertGitCheckout,
+  revertStash,
 } from './git';
 import runBuildSteps from './build';
 import { error, info, log } from './log';
@@ -60,7 +61,7 @@ const getSnapshotConfig = async (hasConfig: boolean) =>
 
 // TODO: Go down a single route, using inquirer if the config prop is not found.
 export const snapshot = async () => {
-  // await warnIfUncommittedChanges();
+  const userStashed = await warnIfUncommittedChanges();
   const currentBranch = await getCurrentGitBranch();
   try {
     const configStr = `./${SNAPSHOT}.json`;
@@ -78,5 +79,8 @@ export const snapshot = async () => {
     log(error(err));
   } finally {
     await revertGitCheckout(currentBranch);
+    if (userStashed) {
+      await revertStash();
+    }
   }
 };

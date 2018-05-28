@@ -5,6 +5,22 @@ import { log } from './log';
 
 const simpleGit = require('simple-git/promise')();
 
+export const askToStashChanges = async (): Promise<string> => {
+  const { stash } = await inquirer.prompt([
+    {
+      type: 'list',
+      name: 'stash',
+      choices: ['yes', 'no'],
+      message:
+        'Uncommited changes detected, would you like to stash your changes?',
+      validate: value => true,
+      // TODO: Validate the build command form the package json.
+    },
+  ]);
+
+  return stash;
+};
+
 const getBuildConfig = async (): Promise<string> => {
   const pkgJsonFile = await readFile('./package.json', 'utf8');
   const { scripts } = JSON.parse(pkgJsonFile);

@@ -1,7 +1,7 @@
 // @flow
 import { promisify } from 'util';
-
 import { info, log } from './log';
+import { askToStashChanges } from './inquirer';
 
 const exec = promisify(require('child_process').exec);
 
@@ -21,12 +21,21 @@ export const checkoutGitCommit = async (checkout: BranchOrCommitId) => {
   }
 };
 
+export const revertStash = async () => {
+  await exec(`git stash pop`);
+};
+
 export const warnIfUncommittedChanges = async () => {
   log(info(`Checking to see if current branch has unstaged changes...`));
   const { stdout } = await exec(
     `git diff-index --quiet HEAD -- || echo "untracked"  >&1`
   );
   if (stdout) {
+    const userStash = await askToStashChanges();
+    if (userStash === 'yes') {
+      await exec(`git stash`);
+      return true;
+    }
     throw new Error(`You have uncommitted changes which would be lost by creating a snapshot of a different branch \n
       Please either stash or commit your changes before creating a snapshot of a specific commit.`);
   }
