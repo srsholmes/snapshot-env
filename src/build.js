@@ -21,7 +21,7 @@ const runBuildStep = async (config: Config) => {
 };
 
 const checkForNodeModules = async deps => {
-  log('Checking for dependencies');
+  log('Checking dependencies');
   const folderExists = await pathExists(`${process.cwd()}/node_modules`);
   const newDeps = await getDependencies();
   if (!folderExists || newDeps.toString() !== deps.toString()) {

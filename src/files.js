@@ -1,5 +1,5 @@
 // @flow
-import { copy } from 'fs-extra';
+import { copy, readFile } from 'fs-extra';
 import { promisify } from 'util';
 import { type Config, TEMP_DIR } from './index';
 import { info, separator, log } from './log';
@@ -17,8 +17,9 @@ export const copyBuildDir = async (config: Config) => {
 };
 
 export const getDependencies = async () => {
-  // eslint-disable-next-line no-undef,import/no-dynamic-require,global-require
-  const json = require(`${process.cwd()}/package.json`);
+  // Use read file here to get round the require cache, as we have already required the packgae.json
+  const file: string = await readFile('./package.json', 'utf8');
+  const json = JSON.parse(file);
   const { dependencies, devDependencies } = json;
   const deps = [
     ...Object.keys(dependencies || {}),

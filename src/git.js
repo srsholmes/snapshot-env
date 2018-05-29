@@ -19,24 +19,12 @@ export const fetchLatestRemote = async () => {
 
 type BranchOrCommitId = string;
 
-export const checkoutGitCommit = async (
-  checkout: BranchOrCommitId,
-  branchSelectedByUser: boolean
-) => {
+export const checkoutGitCommit = async (checkout: BranchOrCommitId) => {
   if (checkout) {
     log(info(`Checking out commit: ${checkout}`));
-    const { stdout } = await exec(`git checkout -f ${checkout}`);
-    log(('Output:', stdout));
-    if (branchSelectedByUser) {
-      // TODO: Check if the local branch is out of date, if so pull latest.
-      log(
-        info(
-          `Branch selected by user, pulling the latest branch.... ${checkout}`
-        )
-      );
-      // Pull the latest updates from origin
-      await exec(`git pull origin ${checkout}`);
-    }
+    const isRemote = checkout.includes('remotes/');
+    const replacedRemote = checkout.replace('remotes/', '');
+    await exec(`git checkout -f ${isRemote ? replacedRemote : checkout}`);
   }
 };
 

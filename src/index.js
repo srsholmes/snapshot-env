@@ -45,16 +45,14 @@ const runBuildWizard = async (config: UserConfig) => {
     .filter(([_, val]) => !val)
     .map(x => x[0]);
 
-  // Determine if the user is going to select a branch so we can pull the branch before creating the snapshot
-  const branchSelectedByUser = unsetConfigValues.includes('commit');
   const neededConfig = await getNeededConfig(unsetConfigValues);
   const finalConfig = {
     ...config,
     ...neededConfig,
   };
   log(info('Config: ', JSON.stringify(finalConfig)));
-  await checkoutGitCommit(finalConfig.commit, branchSelectedByUser);
   const deps = await getDependencies();
+  await checkoutGitCommit(finalConfig.commit);
   await runBuildSteps(finalConfig, deps);
 };
 
