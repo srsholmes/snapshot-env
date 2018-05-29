@@ -11,13 +11,32 @@ export const getCurrentGitBranch = async () => {
   return stdout;
 };
 
+export const fetchLatestRemote = async () => {
+  log(info(`Fetching latest remote...`));
+  const { stdout } = await exec(`git fetch -ap`);
+  return stdout;
+};
+
 type BranchOrCommitId = string;
 
-export const checkoutGitCommit = async (checkout: BranchOrCommitId) => {
+export const checkoutGitCommit = async (
+  checkout: BranchOrCommitId,
+  branchSelectedByUser: boolean
+) => {
   if (checkout) {
     log(info(`Checking out commit: ${checkout}`));
-    const res = await exec(`git checkout -f ${checkout}`).stdout;
-    log(('Output:', res));
+    const { stdout } = await exec(`git checkout -f ${checkout}`);
+    log(('Output:', stdout));
+    if (branchSelectedByUser) {
+      // TODO: Check if the local branch is out of date, if so pull latest.
+      log(
+        info(
+          `Branch selected by user, pulling the latest branch.... ${checkout}`
+        )
+      );
+      // Pull the latest updates from origin
+      await exec(`git pull origin ${checkout}`);
+    }
   }
 };
 

@@ -8,6 +8,7 @@ import {
   getCurrentGitBranch,
   revertGitCheckout,
   revertStash,
+  fetchLatestRemote,
 } from './git';
 import runBuildSteps from './build';
 import { error, info, log } from './log';
@@ -44,13 +45,15 @@ const runBuildWizard = async (config: UserConfig) => {
     .filter(([_, val]) => !val)
     .map(x => x[0]);
 
+  // Determine if the user is going to select a branch so we can pull the branch before creating the snapshot
+  const branchSelectedByUser = unsetConfigValues.includes('commit');
   const neededConfig = await getNeededConfig(unsetConfigValues);
   const finalConfig = {
     ...config,
     ...neededConfig,
   };
   log(info('Config: ', JSON.stringify(finalConfig)));
-  await checkoutGitCommit(finalConfig.commit);
+  await checkoutGitCommit(finalConfig.commit, branchSelectedByUser);
   const deps = await getDependencies();
   await runBuildSteps(finalConfig, deps);
 };
@@ -62,6 +65,7 @@ const getSnapshotConfig = async (hasConfig: boolean) =>
 // TODO: Go down a single route, using inquirer if the config prop is not found.
 export const snapshot = async () => {
   const userStashed = await warnIfUncommittedChanges();
+  await fetchLatestRemote();
   const currentBranch = await getCurrentGitBranch();
   try {
     const configStr = `./${SNAPSHOT}.json`;
