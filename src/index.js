@@ -6,14 +6,13 @@ import {
   warnIfUncommittedChanges,
   checkoutGitCommit,
   getCurrentGitBranch,
-  revertGitCheckout,
   revertStash,
   fetchLatestRemote,
 } from './git';
 import runBuildSteps from './build';
 import { error, info, log } from './log';
 import { getDependencies } from './files';
-import { sequence } from './utils';
+import { exitHandler, sequence } from './utils';
 
 export type Config = {
   build: string,
@@ -60,7 +59,6 @@ const getSnapshotConfig = async (hasConfig: boolean) =>
   // eslint-disable-next-line no-undef,import/no-dynamic-require,global-require
   hasConfig ? require(`${process.cwd()}/${SNAPSHOT}.json`) : null;
 
-// TODO: Go down a single route, using inquirer if the config prop is not found.
 export const snapshot = async () => {
   const userStashed = await warnIfUncommittedChanges();
   await fetchLatestRemote();
@@ -80,9 +78,14 @@ export const snapshot = async () => {
   } catch (err) {
     log(error(err));
   } finally {
-    await revertGitCheckout(currentBranch);
     if (userStashed) {
       await revertStash();
     }
   }
+  ['exit', 'SIGINT', 'SIGUSR1', 'SIGUSR2', 'uncaughtException'].forEach(x =>
+    process.on(
+      x,
+      exitHandler.bind(null, { cleanup: true, exit: true, currentBranch })
+    )
+  );
 };
