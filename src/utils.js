@@ -1,7 +1,7 @@
 import { remove } from 'fs-extra';
 import { TEMP_DIR } from './index';
 import { go, log, separator } from './log';
-import { revertGitCheckout } from './git';
+import { revertGitCheckout, revertStash } from './git';
 
 export const sequence = fns =>
   fns.reduce(
@@ -20,5 +20,8 @@ export async function exitHandler(options, err) {
   await remove(TEMP_DIR);
   separator();
   await revertGitCheckout(options.currentBranch);
+  if (options.userStashed) {
+    await revertStash();
+  }
   if (options.exit) process.exit();
 }

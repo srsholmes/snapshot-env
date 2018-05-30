@@ -77,15 +77,16 @@ export const snapshot = async () => {
     await runBuildWizard(config);
   } catch (err) {
     log(error(err));
-  } finally {
-    if (userStashed) {
-      await revertStash();
-    }
   }
   ['exit', 'SIGINT', 'SIGUSR1', 'SIGUSR2', 'uncaughtException'].forEach(x =>
     process.on(
       x,
-      exitHandler.bind(null, { cleanup: true, exit: true, currentBranch })
+      exitHandler.bind(null, {
+        cleanup: true,
+        exit: true,
+        currentBranch,
+        userStashed,
+      })
     )
   );
 };

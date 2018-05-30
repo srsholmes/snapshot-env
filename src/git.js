@@ -51,7 +51,7 @@ export const warnIfUncommittedChanges = async () => {
 export const revertGitCheckout = async (branch: string) => {
   if (branch) {
     log(info(`Reverting back to previous branch: ${branch}`));
-    const { stdout } = await exec(`git checkout ${branch}`);
+    const { stdout } = await exec(`git checkout -f ${branch}`);
     log(('Output:', stdout));
   }
 };
