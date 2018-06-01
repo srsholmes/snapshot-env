@@ -6,7 +6,6 @@ import {
   warnIfUncommittedChanges,
   checkoutGitCommit,
   getCurrentGitBranch,
-  revertStash,
   fetchLatestRemote,
 } from './git';
 import runBuildSteps from './build';
