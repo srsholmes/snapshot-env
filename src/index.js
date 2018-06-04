@@ -14,6 +14,7 @@ import { getDependencies } from './files';
 import { exitHandler, sequence } from './utils';
 
 export type Config = {
+  port: number,
   build: string,
   commit: string,
   output: string,
@@ -26,7 +27,7 @@ type UserConfig = {
   output: ?string,
 };
 
-export const PORT = 3000;
+export const port = 3000;
 export const SNAPSHOT = 'snapshot';
 export const TEMP_DIR = `node_modules/snapshot-env/${__dirname
   .split('/')
@@ -70,6 +71,7 @@ export const snapshot = async () => {
       build: null,
       commit: null,
       output: null,
+      port: port,
       ...userConfig,
     };
 

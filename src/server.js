@@ -4,7 +4,7 @@ import { exists, copyFile } from 'fs-extra';
 import { createServer } from 'http-server';
 import { fork } from 'child_process';
 import ngrok from 'ngrok';
-import { SNAPSHOT, PORT } from './index';
+import { SNAPSHOT } from './index';
 import { info, go, separator, log } from './log';
 
 function runScript(scriptPath, cb) {
@@ -51,15 +51,15 @@ export const useLocalServer = async (server: string) => {
   log(info(`Custom server started....`));
 };
 
-export const createLocalServer = async (dir: string) => {
+export const createLocalServer = async (dir: string, port: number) => {
   separator();
   log('No custom server found, creating static hosted server');
   createServer({
     root: dir,
-  }).listen(parseInt(PORT, 10));
-  const externalServer = await ngrok.connect(PORT);
+  }).listen(parseInt(port, 10));
+  const externalServer = await ngrok.connect(port);
 
-  log(go(`View local deploy here: http://localhost:${PORT}`));
+  log(go(`View local deploy here: http://localhost:${port}`));
   separator();
   log(go(`Or view externally here: ${externalServer}`));
 };

@@ -38,7 +38,7 @@ const runBuildSteps = async (config: Config, deps: Array<string>) => {
   if (config.server) {
     await useLocalServer(config.server);
   } else {
-    await createLocalServer(directoryToHost);
+    await createLocalServer(directoryToHost, config.port);
   }
 };
 
