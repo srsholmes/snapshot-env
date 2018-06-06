@@ -53,6 +53,7 @@
     "http-server": "^0.11.1",
     "inquirer": "^5.2.0",
     "ngrok": "^3.0.1",
+    "react-dev-utils": "^5.0.1",
     "simple-git": "^1.95.0"
   },
   "devDependencies": {

@@ -2,10 +2,12 @@
 
 import { exists, copyFile } from 'fs-extra';
 import { createServer } from 'http-server';
+import { networkInterfaces } from 'os';
 import { fork } from 'child_process';
 import ngrok from 'ngrok';
 import { SNAPSHOT } from './index';
 import { info, go, separator, log } from './log';
+import { prepareUrls } from 'react-dev-utils/WebpackDevServerUtils';
 
 function runScript(scriptPath, cb) {
   let invoked = false;
@@ -58,8 +60,11 @@ export const createLocalServer = async (dir: string, port: number) => {
     root: dir,
   }).listen(parseInt(port, 10));
   const externalServer = await ngrok.connect(port);
+  const serverCOnfig = { appName: 'Test Snapshot', host: '0.0.0.0', port };
+  const { lanUrlForConfig, localUrlForBrowser } = prepareUrls('http', serverCOnfig.host, serverCOnfig.port);
 
-  log(go(`View local deploy here: http://localhost:${port}`));
+  log(go(`View local build here: ${localUrlForBrowser}`));
+  log(go(`View local build via IP (for internal networks) here: http://${lanUrlForConfig}:${port}`));
   separator();
   log(go(`Or view externally here: ${externalServer}`));
 };
