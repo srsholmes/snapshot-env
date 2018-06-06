@@ -2,12 +2,11 @@
 
 import { exists, copyFile } from 'fs-extra';
 import { createServer } from 'http-server';
-import { networkInterfaces } from 'os';
 import { fork } from 'child_process';
+import { prepareUrls } from 'react-dev-utils/WebpackDevServerUtils';
 import ngrok from 'ngrok';
 import { SNAPSHOT } from './index';
 import { info, go, separator, log } from './log';
-import { prepareUrls } from 'react-dev-utils/WebpackDevServerUtils';
 
 function runScript(scriptPath, cb) {
   let invoked = false;
