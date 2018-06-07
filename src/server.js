@@ -60,10 +60,18 @@ export const createLocalServer = async (dir: string, port: number) => {
   }).listen(parseInt(port, 10));
   const externalServer = await ngrok.connect(port);
   const serverCOnfig = { appName: 'Test Snapshot', host: '0.0.0.0', port };
-  const { lanUrlForConfig, localUrlForBrowser } = prepareUrls('http', serverCOnfig.host, serverCOnfig.port);
+  const { lanUrlForConfig, localUrlForBrowser } = prepareUrls(
+    'http',
+    serverCOnfig.host,
+    serverCOnfig.port,
+  );
 
   log(go(`View local build here: ${localUrlForBrowser}`));
-  log(go(`View local build via IP (for internal networks) here: http://${lanUrlForConfig}:${port}`));
+  log(
+    go(
+      `View local build via IP (for internal networks) here: http://${lanUrlForConfig}:${port}`,
+    ),
+  );
   separator();
   log(go(`Or view externally here: ${externalServer}`));
 };
