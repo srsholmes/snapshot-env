@@ -33,7 +33,7 @@ e.g
 
 ### Method B:
 
-Just run `snapshot-env' in the projects root directory and let the wizard take you through your steps. You will have to do this every time if you do not have a snapshot.json file in the projects root directory. This can be useful for quick testing of prototypes. 
+ Run `snapshot-env` in the projects root directory and let the wizard take you through your steps. You will have to do this every time if you do not have a snapshot.json file in the projects root directory. This can be useful for quick testing of prototypes. 
 
 ![Usage without snapshot json](https://github.com/srsholmes/snapshot-env/blob/develop/usage.gif)
 
