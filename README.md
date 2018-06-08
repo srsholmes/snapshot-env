@@ -1,6 +1,8 @@
 # snapshot-env
 
-A utility to take an environment snapshot and locally host for testing purposes. The output is hosted in its own directory so you can continue developing whilst your branch is being tested.
+A utility to take an environment snapshot of a statically built site and host locally for testing purposes. 
+
+The output is hosted in its own directory on a temporary server so you can continue developing whilst your branch is being tested by other parties.
 
 ## Install
 
@@ -44,7 +46,7 @@ The following explains the keys in the snapshot.json and their intended use.
 
 `build`
 
-This should be the build command to build your project. It is recommended for this to be your 'production' build step to bundle up as if you were for production. N.B. If you are using [Create React App](https://github.com/facebook/create-react-app) this will bundle your app with a service worker, so make sure you clear your browsers service worker in order to see changes deployed.
+This should be the build command to build your project. It is recommended for this to be your 'production' build step as if you were building for production. N.B. If you are using [Create React App](https://github.com/facebook/create-react-app) this will bundle your app with a service worker, so make sure you clear your browsers service worker in order to see changes deployed.
 
 `output`
 
