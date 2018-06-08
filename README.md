@@ -16,18 +16,27 @@ $ npm i snapshot-env
 
 ## Usage
 
+### Method A (Recommended):
+
 Place a `snapshot.json` file in your project file with minimum keys of `output` and `build`.
 
 e.g
 
 ```
 {
-  "output": "./public",
+  "output": "public",
   "build": "npm run prod",
 }
 ```
 
-Then run `snapshot-env` in your root directory.
+### Method B:
+
+Just run `snapshot-env' in the projects root directory and let the wizard take you through your steps. You will have to do this every time if you do not have a snapshot.json file in the projects root directory. This can be useful for quick testing of prototypes. 
+
+![Usage without snapshot json](https://github.com/srsholmes/snapshot-env/blob/develop/usage.gif)
+
+#### Running: 
+Run `snapshot-env` in the root directory of the project.
 
 ## API.
 
@@ -43,7 +52,7 @@ This should be the directory of the output of the `build` command.
 
 `commit`
 
-Optional. Commit ID of the snapshot you would like to 'snapshot'. If commit is specified `snapshot-env` will checkout the commit and create a snapshot of your build at that commit. `snapshot-env` will checkout your existing branch after the snapshot has built so you can continue working.
+Optional. Commit ID of the snapshot you would like to 'snapshot'. If commit is specified `snapshot-env` will checkout the commit and create a snapshot of your build at that commit.
 
 ## License
 
