@@ -13,7 +13,7 @@ $ npm i -g snapshot-env
 Or install locally:
 
 ```sh
-$ npm i snapshot-env
+$ npm i snapshot-env --save-dev
 ```
 
 ## Usage
