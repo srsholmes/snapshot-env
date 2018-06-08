@@ -69,13 +69,13 @@ export const createLocalServer = async (dir: string, config: Config) => {
 
   separator();
   log(`🎉 Successfully built snapshot of ${commit} 🎉`);
-  log(`View local build here:${go(`${localUrlForBrowser}`)}`);
+  log(`View local build here: ${go(`${localUrlForBrowser}`)}`);
   log(
     `View local build via IP (for internal networks) here: ${go(
       `http://${lanUrlForConfig}:${port}`,
     )}`,
   );
   separator();
-  log(`Or view externally here: ${go(` ${externalServer}`)}`);
+  log(`Or view externally here: ${go(`${externalServer}`)}`);
   separator();
 };
