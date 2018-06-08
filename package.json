@@ -44,6 +44,12 @@
     "testEnvironment": "node"
   },
   "keywords": [
+    "static",
+    "hosting",
+    "testing",
+    "cli",
+    "build testing",
+    "branch testing",
     "snapshot",
     "environment"
   ],
