@@ -62,7 +62,6 @@ const getSnapshotConfig = async (hasConfig: boolean) =>
   hasConfig ? require(`${process.cwd()}/${SNAPSHOT}.json`) : null;
 
 export const snapshot = async () => {
-  console.log('AAAAAAAAAA');
   const userStashed = await warnIfUncommittedChanges();
   await fetchLatestRemote();
   const currentBranch = await getCurrentGitBranch();
@@ -82,7 +81,6 @@ export const snapshot = async () => {
   } catch (err) {
     log(error(err));
   } finally {
-    console.log('FINALLY');
     await revertGitCheckout(currentBranch);
     if (userStashed) {
       await revertStash();
@@ -94,8 +92,6 @@ export const snapshot = async () => {
       exitHandler.bind(null, {
         cleanup: true,
         exit: true,
-        currentBranch,
-        userStashed,
       }),
     ),
   );

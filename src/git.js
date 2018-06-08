@@ -35,7 +35,7 @@ export const revertStash = async () => {
 export const warnIfUncommittedChanges = async () => {
   log(info(`Checking to see if current branch has unstaged changes...`));
   const { stdout } = await exec(
-    `git diff-index --quiet HEAD -- || echo "untracked"  >&1`
+    `git diff-index --quiet HEAD -- || echo "untracked"  >&1`,
   );
   if (stdout) {
     const userStash = await askToStashChanges();
@@ -46,11 +46,16 @@ export const warnIfUncommittedChanges = async () => {
     throw new Error(`You have uncommitted changes which would be lost by creating a snapshot of a different branch \n
       Please either stash or commit your changes before creating a snapshot of a specific commit.`);
   }
+  return null;
 };
 
 export const revertGitCheckout = async (branch: string) => {
   if (branch) {
-    log(info(`Reverting back to previous branch: ${branch}`));
+    log(
+      info(
+        `Reverting back to previous branch: ${branch}. This will not affect your hosted snapshot`,
+      ),
+    );
     const { stdout } = await exec(`git checkout -f ${branch}`);
     log(('Output:', stdout));
   }

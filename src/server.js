@@ -5,7 +5,7 @@ import { createServer } from 'http-server';
 import { fork } from 'child_process';
 import { prepareUrls } from 'react-dev-utils/WebpackDevServerUtils';
 import ngrok from 'ngrok';
-import { SNAPSHOT } from './index';
+import { SNAPSHOT, type Config } from './index';
 import { info, go, separator, log } from './log';
 
 function runScript(scriptPath, cb) {
@@ -52,7 +52,8 @@ export const useLocalServer = async (server: string) => {
   log(info(`Custom server started....`));
 };
 
-export const createLocalServer = async (dir: string, port: number) => {
+export const createLocalServer = async (dir: string, config: Config) => {
+  const { port, commit } = config;
   separator();
   log('No custom server found, creating static hosted server');
   createServer({
@@ -66,12 +67,15 @@ export const createLocalServer = async (dir: string, port: number) => {
     serverCOnfig.port,
   );
 
-  log(go(`View local build here: ${localUrlForBrowser}`));
+  separator();
+  log(`🎉 Successfully built snapshot of ${commit} 🎉`);
+  log(`View local build here:${go(`${localUrlForBrowser}`)}`);
   log(
-    go(
-      `View local build via IP (for internal networks) here: http://${lanUrlForConfig}:${port}`,
-    ),
+    `View local build via IP (for internal networks) here: ${go(
+      `http://${lanUrlForConfig}:${port}`,
+    )}`,
   );
   separator();
-  log(go(`Or view externally here: ${externalServer}`));
+  log(`Or view externally here: ${go(` ${externalServer}`)}`);
+  separator();
 };
