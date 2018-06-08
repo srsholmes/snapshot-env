@@ -19,9 +19,5 @@ export async function exitHandler(options, err) {
   log(go('Removing snapshot directory...'));
   await remove(TEMP_DIR);
   separator();
-  await revertGitCheckout(options.currentBranch);
-  if (options.userStashed) {
-    await revertStash();
-  }
   if (options.exit) process.exit();
 }

@@ -7,6 +7,8 @@ import {
   checkoutGitCommit,
   getCurrentGitBranch,
   fetchLatestRemote,
+  revertGitCheckout,
+  revertStash,
 } from './git';
 import runBuildSteps from './build';
 import { error, info, log } from './log';
@@ -60,6 +62,7 @@ const getSnapshotConfig = async (hasConfig: boolean) =>
   hasConfig ? require(`${process.cwd()}/${SNAPSHOT}.json`) : null;
 
 export const snapshot = async () => {
+  console.log('AAAAAAAAAA');
   const userStashed = await warnIfUncommittedChanges();
   await fetchLatestRemote();
   const currentBranch = await getCurrentGitBranch();
@@ -71,13 +74,19 @@ export const snapshot = async () => {
       build: null,
       commit: null,
       output: null,
-      port: port,
+      port,
       ...userConfig,
     };
 
     await runBuildWizard(config);
   } catch (err) {
     log(error(err));
+  } finally {
+    console.log('FINALLY');
+    await revertGitCheckout(currentBranch);
+    if (userStashed) {
+      await revertStash();
+    }
   }
   ['exit', 'SIGINT', 'SIGUSR1', 'SIGUSR2', 'uncaughtException'].forEach(x =>
     process.on(
@@ -87,7 +96,7 @@ export const snapshot = async () => {
         exit: true,
         currentBranch,
         userStashed,
-      })
-    )
+      }),
+    ),
   );
 };
