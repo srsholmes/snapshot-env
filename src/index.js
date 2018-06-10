@@ -20,7 +20,7 @@ export type Config = {
   build: string,
   commit: string,
   output: string,
-  server: string,
+  server?: ?string,
 };
 
 type UserConfig = {
@@ -29,22 +29,29 @@ type UserConfig = {
   output: ?string,
 };
 
-export const port = 3000;
+export const PORT = 3000;
 export const SNAPSHOT = 'snapshot';
 export const TEMP_DIR = `node_modules/snapshot-env/${__dirname
   .split('/')
   .pop()}/${SNAPSHOT}s`;
 
-const getNeededConfig = async (arr: Array<string>) => {
+export const getNeededConfig = async (arr: Array<string>) => {
   const fns = arr.map(x => () => getConfigFromUser(x));
   const res = await sequence(fns);
   return res.reduce((acc, curr, i) => ({ ...acc, [arr[i]]: curr }), {});
 };
 
-const runBuildWizard = async (config: UserConfig) => {
-  const unsetConfigValues = Object.entries(config)
+export const getUnsetConfigValues = (config: UserConfig) =>
+  Object.entries(config)
     .filter(([_, val]) => !val)
     .map(x => x[0]);
+
+export const getSnapshotConfig = async (hasConfig: boolean) =>
+  // eslint-disable-next-line no-undef,import/no-dynamic-require,global-require
+  hasConfig ? require(`${process.cwd()}/${SNAPSHOT}.json`) : null;
+
+const runBuildWizard = async (config: UserConfig) => {
+  const unsetConfigValues = getUnsetConfigValues(config);
 
   const neededConfig = await getNeededConfig(unsetConfigValues);
   const finalConfig = {
@@ -56,10 +63,6 @@ const runBuildWizard = async (config: UserConfig) => {
   await checkoutGitCommit(finalConfig.commit);
   await runBuildSteps(finalConfig, deps);
 };
-
-const getSnapshotConfig = async (hasConfig: boolean) =>
-  // eslint-disable-next-line no-undef,import/no-dynamic-require,global-require
-  hasConfig ? require(`${process.cwd()}/${SNAPSHOT}.json`) : null;
 
 export const snapshot = async () => {
   const userStashed = await warnIfUncommittedChanges();
@@ -73,7 +76,7 @@ export const snapshot = async () => {
       build: null,
       commit: null,
       output: null,
-      port,
+      port: PORT,
       ...userConfig,
     };
 
