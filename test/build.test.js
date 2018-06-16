@@ -7,12 +7,12 @@ describe('runBuildSteps', async () => {
   it('Runs the correct build steps', async () => {
     const config = {
       port: 8000,
-      build: 'echo "Build Test"',
+      build: 'echo "Hello test"',
       commit: 'commit',
       output: 'test',
     };
     const actual = await runBuildSteps(config, getSortedDeps());
-    console.log('(((((((((((((((((');
-    console.log(actual);
+    console.log({ actual })
+    expect(actual).toBeTruthy();
   });
 });

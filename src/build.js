@@ -16,8 +16,13 @@ const runBuildStep = async (config: Config) => {
   const { stdout, stderr } = await exec(`${build}`, {
     maxBuffer: 1024 * 8000,
   });
-  log(('Output:', stdout));
-  log(error('stderr:', stderr));
+  if (stdout) {
+    log(('Output:', stdout));
+  }
+  if (stderr) {
+    log(error('stderr:', stderr));
+  }
+  return true;
 };
 
 const checkForNodeModules = async deps => {
@@ -40,6 +45,7 @@ const runBuildSteps = async (config: Config, deps: Array<string>) => {
   } else {
     await createLocalServer(directoryToHost, config);
   }
+  return true;
 };
 
 export default runBuildSteps;

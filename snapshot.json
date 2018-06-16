@@ -1,0 +1,6 @@
+{
+  "build": "snapshot:test:build",
+  "port": 1000,
+  "commit": "testCommit",
+  "output": "testOutput"
+}

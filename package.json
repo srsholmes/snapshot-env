@@ -14,10 +14,7 @@
   "bin": {
     "snapshot-env": "./index.js"
   },
-  "files": [
-    "dist",
-    "index.js"
-  ],
+  "files": ["dist", "index.js"],
   "scripts": {
     "test": "jest",
     "test:prod": "npm run clean && npm run build",
@@ -35,7 +32,8 @@
     "minor": "npm version minor && npm publish",
     "major": "npm version major && npm publish",
     "prepublishOnly": "npm run build",
-    "postpublish": "git push origin develop --follow-tags"
+    "postpublish": "git push origin develop --follow-tags",
+    "snapshot:test:build": "echo \"snapshot:test:build\""
   },
   "watch": {
     "build": "src"

@@ -19,21 +19,32 @@ describe('Main functions and constants', async () => {
     expect(tempDirConst).toEqual(TEMP_DIR);
   });
 
-  it('getNeededConfig', async () => {
-    const actual = getNeededConfig(['build']);
-    const expected = 'hello';
-    expect(actual).toEqual(expected);
-  });
-
   it('getUnsetConfigValues', async () => {
-    const actual = getUnsetConfigValues();
-    const expected = 'hello';
+    const actual = getUnsetConfigValues({
+      build: null,
+      port: 300,
+      commit: null,
+      output: 'test',
+    });
+    const expected = ['build', 'commit'];
     expect(actual).toEqual(expected);
   });
 
-  it('getSnapshotConfig', async () => {
-    const actual = getSnapshotConfig();
-    const expected = 'hello';
+  it('getSnapshotConfig true', async () => {
+    const actual = await getSnapshotConfig(true);
+    const expected = {
+      build: 'snapshot:test:build',
+      port: 1000,
+      commit: 'testCommit',
+      output: 'testOutput',
+    };
+
+    expect(actual).toEqual(expected);
+  });
+
+  it('getSnapshotConfig false', async () => {
+    const actual = await getSnapshotConfig(false);
+    const expected = null;
     expect(actual).toEqual(expected);
   });
 });
