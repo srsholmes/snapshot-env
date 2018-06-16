@@ -1,6 +1,6 @@
 # snapshot-env
 
-A utility to take an environment snapshot of a statically built site and host locally for testing purposes. 
+A utility to take an environment snapshot of a statically built site and host locally for testing purposes.
 
 The output is hosted in its own directory on a temporary server so you can continue developing whilst your branch is being tested by other parties.
 
@@ -33,11 +33,25 @@ e.g
 
 ### Method B:
 
- Run `snapshot-env` in the projects root directory and let the wizard take you through your steps. You will have to do this every time if you do not have a snapshot.json file in the projects root directory. This can be useful for quick testing of prototypes. 
+Command line arguments can be used to initialise the snapshot.
+
+The command line options are all optional and will take override the snapshot.json options. The command line options are as follows:
+
+```bash
+'-p', or '--port' Port number to host snapshot on.
+'-b,' or '--build' 'Build command to build snapshot'
+'-c,' or '--commit' 'Commit ID or Branch name to checkout and build'
+'-o'' or '--output' 'Output Directory where the build will be made'
+```
+
+### Method C:
+
+Run `snapshot-env` in the projects root directory and let the wizard take you through your steps. You will have to do this every time if you do not have a snapshot.json file in the projects root directory. This can be useful for quick testing of prototypes.
 
 ![Usage without snapshot json](https://github.com/srsholmes/snapshot-env/blob/develop/usage.gif)
 
-#### Running: 
+#### Running:
+
 Run `snapshot-env` in the root directory of the project.
 
 ## API.
