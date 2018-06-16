@@ -1,5 +1,6 @@
 // @flow
 
+import program from 'commander';
 import { pathExists } from 'fs-extra';
 import getConfigFromUser from './inquirer';
 import {
@@ -29,7 +30,16 @@ type UserConfig = {
   output: ?string,
 };
 
-export const PORT = 3000;
+program
+  .version(require(`../package.json`).version, '-v, --version')
+  .option('-p, --port <n>', 'Port', parseInt)
+  .option('-b, --build [type]', 'Build')
+  .option('-c, --commit [type]', 'Commit or Branch')
+  .option('-o, --output [type]', 'Output Directory')
+  .parse(process.argv);
+
+export const PORT = program.port || 3000;
+
 export const SNAPSHOT = 'snapshot';
 export const TEMP_DIR = `node_modules/snapshot-env/${__dirname
   .split('/')
@@ -73,9 +83,9 @@ export const snapshot = async () => {
     const hasConfig = await pathExists(configStr, 'utf8');
     const userConfig = await getSnapshotConfig(hasConfig);
     const config = {
-      build: null,
-      commit: null,
-      output: null,
+      build: program.build || null,
+      commit: program.commit || null,
+      output: program.output || null,
       port: PORT,
       ...userConfig,
     };
