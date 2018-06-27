@@ -12,6 +12,7 @@ export const getCurrentGitBranch = async () => {
 };
 
 export const fetchLatestRemote = async () => {
+  process.stdout.write('SWIFT CAN YOU HEAR ME!');
   log(info(`Fetching latest remote...`));
   const { stdout } = await exec(`git fetch -ap`);
   return stdout;

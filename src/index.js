@@ -36,9 +36,14 @@ program
   .option('-b, --build [type]', 'Build')
   .option('-c, --commit [type]', 'Commit or Branch')
   .option('-o, --output [type]', 'Output Directory')
+  .option('-d, --dir [type]', 'Directory to Run')
   .parse(process.argv);
 
 export const PORT = program.port || 3000;
+
+if (program.dir) {
+  process.chdir(program.dir);
+}
 
 export const SNAPSHOT = 'snapshot';
 export const TEMP_DIR = `node_modules/snapshot-env/${__dirname
@@ -75,6 +80,7 @@ const runBuildWizard = async (config: UserConfig) => {
 };
 
 export const snapshot = async () => {
+  process.stdout.write('<<<<<<<<<<<<<<<<<<<<Hello>>>>>>>>>>>>>>>>>>>>');
   const userStashed = await warnIfUncommittedChanges();
   await fetchLatestRemote();
   const currentBranch = await getCurrentGitBranch();
